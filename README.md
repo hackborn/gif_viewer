@@ -24,6 +24,9 @@ The code is in three main pieces:
 ## using the app
 The compiled app is extremely simple. On startup it loads an included sample GIF. If you want to view another GIF, drag and drop onto the app window. There is a single control to change the playback speed. Also, the GIF is automatically scaled to the current window size, so the aspect ratio will be off.
 
+The latest Windows binary release can be downloaded here:<br>
+https://github.com/hackborn/gif_viewer/releases/download/v0.1.0/gif_viewer.zip
+
 ## using the gif_io lib
 There are two things to do if you're using the lib in your own code:
 

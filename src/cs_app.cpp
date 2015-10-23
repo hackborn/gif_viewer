@@ -28,7 +28,7 @@ GifApp::~GifApp() {
 
 void GifApp::prepareSettings(Settings* s) {
 	if (s) {
-//		s->setTitle("C. Clara Run");
+		s->setTitle("GIF Viewer");
 		s->setWindowSize(glm::ivec2(1920, 1080));
 //		s->setFullScreen(true);
 //		s->setConsoleWindowEnabled(true);
@@ -75,7 +75,6 @@ void GifApp::keyDown(ci::app::KeyEvent e) {
 void GifApp::fileDrop(ci::app::FileDropEvent e) {
 	try {
 		auto				strings = mThreadInput.make();
-		TextureGifList					images;
 		for (const auto& it : e.getFiles()) {
 			strings->push_back(it.string());
 		}

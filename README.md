@@ -34,6 +34,13 @@ There are two things to do if you're using the lib in your own code:
 
 2. Create an instance of gif::File and call load() on a file and the gif::List subclasses mentioned above. When load() is finished you'll have a list populated with drawable bitmaps.
 
+## limitations
+There are some features of the GIF format that I haven't seen in the wild, so they aren't currently supported. If I can find examples that have any of these items I'll add support:
+
+* Comment blocks
+* Text blocks
+* Interlacing
+
 ## license
 There is no license on this code -- do whatever you like -- but I have no responsibility for any errors or damage that results from using it. It's worth noting that the LZW decompression code is based on the very nice code in the Go framework. I'm not sure what impact rewriting it has, but you might want to follow the Go (BSD, I believe) license if you have any concerns.
 

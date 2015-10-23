@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Source Files\kt">
+      <UniqueIdentifier>{af6ebf4b-c6ac-4511-9016-8f64e504024e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\kt\app">
+      <UniqueIdentifier>{57f6730c-4c5b-4d21-8b81-4119e9d76b09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\kt\time">
+      <UniqueIdentifier>{fa4d4809-2b5c-4406-98c3-3b87c80bc4f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gif_io">
+      <UniqueIdentifier>{8cfd3fdb-e38f-4b81-9f8b-56eeb1c05234}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClCompile Include="..\src\cs_app.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClInclude Include="..\src\kt\app\kt_environment.h">
+      <Filter>Source Files\kt\app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kt\app\kt_string.h">
+      <Filter>Source Files\kt\app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\kt\time\seconds.h">
+      <Filter>Source Files\kt\time</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gif_io\lzw_reader.h">
+      <Filter>Source Files\gif_io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gif_io\gif_list.h">
+      <Filter>Source Files\gif_io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gif_io\gif_color.h">
+      <Filter>Source Files\gif_io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gif_io\gif_bitmap.h">
+      <Filter>Source Files\gif_io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\texture_gif_list.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gif_io\gif_file.h">
+      <Filter>Source Files\gif_io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\safe_value.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\texture_gif_view.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cs_app.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\kt\app\kt_environment.cpp">
+      <Filter>Source Files\kt\app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\kt\app\kt_string.cpp">
+      <Filter>Source Files\kt\app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\kt\time\seconds.cpp">
+      <Filter>Source Files\kt\time</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gif_io\lzw_reader.cpp">
+      <Filter>Source Files\gif_io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\texture_gif_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gif_io\gif_file.cpp">
+      <Filter>Source Files\gif_io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\texture_gif_view.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

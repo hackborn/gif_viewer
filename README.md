@@ -11,7 +11,7 @@ https://libcinder.org/static/releases/cinder_0.9.0_vc2013.zip<br>
 3. And of course, pull and compile this app.
 
 ## purpose
-There are many great GIF libraries available. The motivation adding my own was primarily pure curiosity about the format, although in looking through various implementations I didn't come across anything that really hit my sweet spot: A couple of image format-independent classes I could drop into a project that had a minimal API for providing my own translation from whatever local bitmap storage class I happen to be using.
+There are many great GIF libraries available. The motivation for adding my own was primarily pure curiosity about the format, although in looking through various implementations I didn't come across anything that really hit my sweet spot: A couple of image format-independent classes I could drop into a project that had a minimal API for providing my own translation from whatever local bitmap storage class I happen to be using.
 
 So this repo is really two things, an isolated library with a few classes for loading GIF files (and hopefully writing at some point), as well as a simple viewer to verify that everything's working.
 

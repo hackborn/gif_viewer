@@ -37,7 +37,8 @@ void GifApp::prepareSettings(Settings* s) {
 
 void GifApp::setup() {
 	base::setup();
-	// Printing during construction creates an error, so clear that out, in case anyone did.
+	// Printing during construction creates an error state, preventing further output,
+	// so clear that out, in case anyone did.
 	std::cout.clear();
 
 	mParams = ci::params::InterfaceGl::create("Params", glm::ivec2(220, 120));
@@ -47,15 +48,12 @@ void GifApp::setup() {
 	// Start a thread to handle the actual loading
 	mQuit = false;
 	ci::gl::ContextRef backgroundCtx = ci::gl::Context::create(ci::gl::context());
-	mThread = std::thread( bind( &GifApp::gifLoadThread, this, backgroundCtx));
+	mThread = std::thread( bind( &GifApp::gifThread, this, backgroundCtx));
 
 	// Load the default GIF.
 	auto	input = mThreadInput.make();
 	input->push_back(kt::env::expand("$(DATA)/tumblr_n8njbcmeWS1t9jwm6o1_400.gif"));
 	mThreadInput.push(input);
-}
-
-void GifApp::mouseDrag(ci::app::MouseEvent e) {
 }
 
 void GifApp::keyDown(ci::app::KeyEvent e) {
@@ -74,6 +72,7 @@ void GifApp::keyDown(ci::app::KeyEvent e) {
 
 void GifApp::fileDrop(ci::app::FileDropEvent e) {
 	try {
+		// Send all dropped files to the GIF thread.
 		auto				strings = mThreadInput.make();
 		for (const auto& it : e.getFiles()) {
 			strings->push_back(it.string());
@@ -85,7 +84,7 @@ void GifApp::fileDrop(ci::app::FileDropEvent e) {
 }
 
 void GifApp::update() {
-	// Get current gif list
+	// Get current GIF list
 	auto		list = mThreadOutput.pop();
 	if (list) {
 		mGifView.setTextures(*list);
@@ -108,8 +107,8 @@ void GifApp::draw() {
 	mParams->draw();
 }
 
-void GifApp::gifLoadThread(ci::gl::ContextRef context) {
-	ci::ThreadSetup threadSetup;
+void GifApp::gifThread(ci::gl::ContextRef context) {
+	ci::ThreadSetup					threadSetup;
 	context->makeCurrent();
 
 	gif::File						gif;

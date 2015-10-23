@@ -17,6 +17,7 @@ namespace cs {
  */
 class GifApp : public ci::app::App {
 private:
+	// Small convience, initialize a class that can locate various file paths.
 	const bool					mEnvInitialized;
 
 public:
@@ -26,7 +27,6 @@ public:
 	static void					prepareSettings(Settings*);
 	void						setup() override;
 
-	void						mouseDrag(ci::app::MouseEvent) override;
 	void						keyDown(ci::app::KeyEvent) override;
 	void						fileDrop(ci::app::FileDropEvent) override;
 
@@ -34,7 +34,8 @@ public:
 	void						draw() override;
 
 private:
-	void						gifLoadThread(ci::gl::ContextRef);
+	// Separate thread where all the file loading and saving occurs.
+	void						gifThread(ci::gl::ContextRef);
 
 	using base = ci::app::App;
 	using StringVec = std::vector<std::string>;
@@ -46,7 +47,6 @@ private:
 	// Params
 	ci::params::InterfaceGlRef	mParams;
 	int32_t						mFrame = 0;
-	float						mFrameRate = 0.0f;
 	float						mPlaybackSpeed = 1.0f;
 
 	// Gif loading

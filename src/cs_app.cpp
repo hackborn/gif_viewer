@@ -2,11 +2,20 @@
 
 #include <cinder/app/RendererGl.h>
 #include <cinder/gl/gl.h>
+#include <cinder/Filesystem.h>
 #include "kt/app/kt_environment.h"
+#include "kt/app/kt_string.h"
 #include "gif_io/gif_file.h"
 #include "texture_gif_list.h"
 
 namespace cs {
+
+namespace {
+// True if the path is a GIF
+bool						is_gif(const ci::fs::path&);
+// True if the path is a non-GIF image (jpg, png);
+bool						is_image(const ci::fs::path&);
+}
 
 GifApp::GifApp()
 		: mEnvInitialized(kt::env::initialize()) 
@@ -52,7 +61,7 @@ void GifApp::setup() {
 
 	// Load the default GIF.
 	auto	input = mThreadInput.make();
-	input->push_back(kt::env::expand("$(DATA)/tumblr_n8njbcmeWS1t9jwm6o1_400.gif"));
+	input->mPaths.push_back(kt::env::expand("$(DATA)/tumblr_n8njbcmeWS1t9jwm6o1_400.gif"));
 	mThreadInput.push(input);
 }
 
@@ -72,12 +81,14 @@ void GifApp::keyDown(ci::app::KeyEvent e) {
 
 void GifApp::fileDrop(ci::app::FileDropEvent e) {
 	try {
-		// Send all dropped files to the GIF thread.
-		auto				strings = mThreadInput.make();
-		for (const auto& it : e.getFiles()) {
-			strings->push_back(it.string());
+		auto				input(makeInput(e));
+		if (!input) return;
+
+		if (input->mType == InputType::kSave) {
+			input->mSavePath = getSaveFilePath().string();
+			if (input->mSavePath.empty()) return;
 		}
-		mThreadInput.push(strings);
+		mThreadInput.push(input);
 	} catch (std::exception const &ex) {
 		std::cout << "gif load error=" << ex.what() << std::endl;
 	}
@@ -107,30 +118,74 @@ void GifApp::draw() {
 	mParams->draw();
 }
 
+std::shared_ptr<GifApp::Input> GifApp::makeInput(const ci::app::FileDropEvent &e) const {
+	auto				input = mThreadInput.make();
+	if (!input) return nullptr;
+	for (const auto& it : e.getFiles()) {
+		// Only add gifs to load input, images to save input. Take the first of whatever I find
+		if (is_gif(it)) {
+			if (input->mPaths.empty() || input->mType == InputType::kLoad) {
+				input->mType = InputType::kLoad;
+				input->mPaths.push_back(it.string());
+			}
+		} else if (is_image(it)) {
+			if (input->mPaths.empty() || input->mType == InputType::kSave) {
+				input->mType = InputType::kSave;
+				input->mPaths.push_back(it.string());
+			}
+		}
+	}
+	return input;
+}
+
 void GifApp::gifThread(ci::gl::ContextRef context) {
 	ci::ThreadSetup					threadSetup;
 	context->makeCurrent();
 
 	gif::File						gif;
 	while (!mQuit) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		try {
 			auto					input = mThreadInput.pop();
 			if (input) {
-				auto				output = mThreadOutput.make();
-				for (const auto& it : (*input)) {
-					gif.load(it, *output);
-					// Ideally we'd have a way to signal the gif to quit if
-					// we got the quit command in the middle of loading.
+				if (input->mType == InputType::kLoad) {
+					gifThreadLoad(input->mPaths, gif);
+				} else if (input->mType == InputType::kSave) {
+					gifThreadSave(*input, gif);
 				}
-				mThreadOutput.push(output);
 			}
 		} catch (std::exception const&) {
 		}
 	}
 }
 
+void GifApp::gifThreadLoad(const std::vector<std::string> &input, gif::File &gf) {
+	auto				output = mThreadOutput.make();
+	for (const auto& it : input) {
+		gf.load(it, *output);
+		// Ideally we'd have a way to signal the gif to quit if
+		// we got the quit command in the middle of loading.
+	}
+	mThreadOutput.push(output);
+}
+void GifApp::gifThreadSave(const Input &input, gif::File &gf) {
+	gf.save(input.mSavePath);
+}
+
+namespace {
+
+bool						is_gif(const ci::fs::path &p) {
+	std::string				ext = kt::to_lower(p.extension().string());
+	return ext == ".gif";
+}
+
+bool						is_image(const ci::fs::path &p) {
+	std::string				ext = kt::to_lower(p.extension().string());
+	return ext == ".jpg" || ext == ".jpeg" || ext == ".png";
+}
+
+}
+
 } // namespace cs
 
-// This line tells Cinder to actually create and run the application.
 CINDER_APP(cs::GifApp, ci::app::RendererGl, cs::GifApp::prepareSettings)

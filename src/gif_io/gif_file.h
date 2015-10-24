@@ -19,6 +19,10 @@ public:
 	// This peforms no validation that the file is valid.
 	// Answer false on error.
 	bool				load(const std::string&, gif::ListConstructor &output);
+
+	// Given a file path, save all frames of data.
+	// Answer false on error.
+	bool				save(const std::string&);
 };
 
 } // namespace gif

@@ -1,15 +1,16 @@
-#ifndef CS_APP_H_
-#define CS_APP_H_
+#ifndef APP_APP_H_
+#define APP_APP_H_
 
 #include "cinder/params/Params.h"
 
-#include <cinder/gl/Context.h>
 #include <cinder/app/App.h>
+#include <cinder/gl/Context.h>
 #include <cinder/Camera.h>
 #include <cinder/Thread.h>
 #include "safe_value.h"
 #include "texture_gif_view.h"
 
+namespace gif { class File; }
 namespace cs {
 
 /**
@@ -34,11 +35,21 @@ public:
 	void						draw() override;
 
 private:
-	// Separate thread where all the file loading and saving occurs.
-	void						gifThread(ci::gl::ContextRef);
-
 	using base = ci::app::App;
 	using StringVec = std::vector<std::string>;
+
+	enum class InputType		{ kLoad, kSave };
+	struct Input {
+		InputType				mType = InputType::kLoad;
+		StringVec				mPaths;
+		std::string				mSavePath;
+	};
+
+	std::shared_ptr<Input>		makeInput(const ci::app::FileDropEvent&) const;
+	// Separate thread where all the file loading and saving occurs.
+	void						gifThread(ci::gl::ContextRef);
+	void						gifThreadLoad(const std::vector<std::string>&, gif::File&);
+	void						gifThreadSave(const Input&, gif::File&);
 
 	// Drawing
 	ci::CameraOrtho				mCameraOrtho;
@@ -52,7 +63,7 @@ private:
 	// Gif loading
 	std::thread					mThread;
 	std::atomic_bool			mQuit;
-	SafeValue<StringVec>		mThreadInput;
+	SafeValue<Input>			mThreadInput;
 	SafeValue<TextureGifList>	mThreadOutput;
 };
 

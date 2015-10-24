@@ -16,6 +16,7 @@ namespace {
 class GraphicControlExtension;
 using GraphicControlExtensionRef = std::shared_ptr<GraphicControlExtension>;
 
+const std::string	SIG("GIF");
 enum class Version { kMissing, k87a, k89a };
 
 size_t				color_count(const size_t encoded) {
@@ -96,10 +97,13 @@ struct BlockReadArgs {
 };
 
 struct Header {
+	Header() { }
+	Header(const std::string &sig, const Version &v) : mSig(sig), mVersion(v) { }
+
 	std::string		mSig;
 	Version			mVersion = Version::kMissing;
 
-	bool			isGif() const { return mSig == "GIF"; }
+	bool			isGif() const { return mSig == SIG; }
 
 	size_t			read(const std::vector<char> &buffer, size_t position) {
 		mSig = read_string(buffer, 3, position);
@@ -109,6 +113,12 @@ struct Header {
 		else if (v == "89a") mVersion = Version::k89a;
 
 		return position;
+	}
+
+	void			write(std::ostream &buf) {
+		buf << mSig;
+		if (mVersion == Version::k87a) buf << "87a";
+		else if (mVersion == Version::k89a) buf << "89a";
 	}
 };
 
@@ -389,12 +399,14 @@ bool File::load(const std::string &fn, gif::ListConstructor &constructor) {
 		std::ifstream		input(fn, std::ios::binary);
 		std::vector<char>	buffer(	(std::istreambuf_iterator<char>(input)), 
 									(std::istreambuf_iterator<char>()));
-		size_t				pos = 0;
+		input.close();
 
 		Header				header;
 		LogicalScreen		screen;
 		ColorTable			globalColorTable;
 		BlockList			blocks;
+
+		size_t				pos = 0;
 
 		// Header
 		if (buffer.size() < 6) throw std::runtime_error("No header");
@@ -421,7 +433,20 @@ bool File::load(const std::string &fn, gif::ListConstructor &constructor) {
 			}
 		}
 	} catch (std::exception const &ex) {
-		std::cout << "Error reading gif=" << ex.what() << std::endl;
+		std::cout << "Error in gif::File::load()=" << ex.what() << std::endl;
+	}
+	return false;
+}
+
+bool File::save(const std::string &fn) {
+	try {
+		std::ofstream		output(fn, std::ios::out | std::ios::binary);
+		Header				header(SIG, Version::k89a);
+		LogicalScreen		screen;
+
+		header.write(output);
+	} catch (std::exception const &ex) {
+		std::cout << "Error in gif::File::save()=" << ex.what() << std::endl;
 	}
 	return false;
 }

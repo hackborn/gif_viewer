@@ -16,6 +16,9 @@ public:
 	virtual ~ListConstructor() { }
 
 	virtual void			addFrame(const gif::Bitmap&, const double delay) = 0;
+	// Called when the if reader is done reading frames, so
+	// any resources can be cleaned up.
+	virtual void			readerFinished() { }
 };
 
 /**

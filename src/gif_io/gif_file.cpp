@@ -428,11 +428,13 @@ bool Reader::read(gif::ListConstructor &constructor) {
 			const uint8_t	byte1 = buffer[pos++];
 			if (byte1 == 0x3b) {
 				// Trailer, success
+				constructor.readerFinished();
 				return true;
 			} else {
 				pos = blocks.read(byte1, buffer, pos, bra);
 			}
 		}
+		constructor.readerFinished();
 	} catch (std::exception const &ex) {
 		std::cout << "Error in gif::Reader::read()=" << ex.what() << std::endl;
 	}

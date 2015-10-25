@@ -11,26 +11,24 @@ namespace cs {
  * @class cs::TextureGifList
  */
 TextureGifList::TextureGifList()
-		: base([this](const gif::Bitmap &bm)->ImagePair { return convert(bm); }) {
+		: base([this](const gif::Bitmap &bm)->ci::gl::TextureRef { return convert(bm); }) {
 }
 
-void TextureGifList::makeTextures() {
-	ci::gl::Texture2d::Format		fmt;
-	fmt.loadTopDown(true);
-
-	for (auto& f : mFrames) {
-		f.mBitmap.second = ci::gl::Texture2d::create(f.mBitmap.first, fmt);
-	}
+void TextureGifList::readerFinished() {
+	mSurface = ci::Surface8u();
 }
 
-ImagePair TextureGifList::convert(const gif::Bitmap &bm) const {
-	ImagePair			ans;
-	if (bm.mPixels.empty()) return ans;
+ci::gl::TextureRef TextureGifList::convert(const gif::Bitmap &bm) {
+	if (bm.mPixels.empty()) return nullptr;
 	// Error condition, should never happen
 	if (bm.mPixels.size() != static_cast<size_t>(bm.mWidth*bm.mHeight)) throw std::runtime_error("Bitmap pixels do not match size");
 
-	ans.first = ci::Surface8u(bm.mWidth, bm.mHeight, true);
-	ci::Surface8u&		dest(ans.first);
+	// Reuse a surface
+	if (mSurface.getWidth() != bm.mWidth || mSurface.getHeight() != bm.mHeight) {
+		mSurface = ci::Surface8u(bm.mWidth, bm.mHeight, true);
+	}
+
+	ci::Surface8u&		dest(mSurface);
 	auto				src(bm.mPixels.begin());
 	auto				pix = dest.getIter();
 	while (pix.line()) {
@@ -43,12 +41,11 @@ ImagePair TextureGifList::convert(const gif::Bitmap &bm) const {
 			++src;
 		}
 	}
-	return ans;
-#if 0
 	ci::gl::Texture2d::Format		fmt;
 	fmt.loadTopDown(true);
-	return ci::gl::Texture2d::create(dest, fmt);
-#endif
+	auto ans = ci::gl::Texture2d::create(dest, fmt);
+	glFlush();
+	return ans;
 }
 
 } // namespace cs

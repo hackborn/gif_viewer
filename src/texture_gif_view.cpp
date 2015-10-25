@@ -51,9 +51,9 @@ void TextureGifView::update() {
 
 void TextureGifView::draw() {
 	auto*			frame = mTextures.getFrame(mTextureIndex);
-	if (frame && frame->mBitmap.second) {
+	if (frame && frame->mBitmap) {
 		ci::gl::color(1, 1, 1, 1);
-		ci::gl::ScopedTextureBind	ts(frame->mBitmap.second);
+		ci::gl::ScopedTextureBind	ts(frame->mBitmap);
 		ci::gl::ScopedDepth			sd(false);
 		mBatch->draw();
 	}
@@ -62,9 +62,6 @@ void TextureGifView::draw() {
 
 void TextureGifView::setTextures(const TextureGifList &t) {
 	mTextures = t;
-	// Unfortunately, need to convert all the surfaces to textures here. That should have
-	// happened directly in the load thread, but it was resulting in intermittent black frames.
-	mTextures.makeTextures();
 	mTextureIndex = 0;
 	mNextTime = findFrameRate();
 	mTimer.start();

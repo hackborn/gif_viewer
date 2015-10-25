@@ -1,5 +1,5 @@
 # gif_viewer
-Simple C++ GIF file reader library + example viewer
+Simple GIF file reader library and example viewer. C++/Cinder/Visual Studio 2013.
 
 ## compiling
 1. Download Cinder 0.9.0 for Visual Studio 2013:<br>

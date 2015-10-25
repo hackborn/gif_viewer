@@ -389,14 +389,15 @@ void BlockReadArgs::addPixels(const std::vector<uint8_t> &indexes, const ColorTa
 }
 
 /**
- * @class gif::File
+ * @class gif::Reader
  */
-File::File() {
+Reader::Reader(std::string path)
+		: mPath(path) {
 }
 
-bool File::load(const std::string &fn, gif::ListConstructor &constructor) {
+bool Reader::read(gif::ListConstructor &constructor) {
 	try {
-		std::ifstream		input(fn, std::ios::binary);
+		std::ifstream		input(mPath, std::ios::binary);
 		std::vector<char>	buffer(	(std::istreambuf_iterator<char>(input)), 
 									(std::istreambuf_iterator<char>()));
 		input.close();
@@ -433,20 +434,32 @@ bool File::load(const std::string &fn, gif::ListConstructor &constructor) {
 			}
 		}
 	} catch (std::exception const &ex) {
-		std::cout << "Error in gif::File::load()=" << ex.what() << std::endl;
+		std::cout << "Error in gif::Reader::read()=" << ex.what() << std::endl;
 	}
 	return false;
 }
 
-bool File::save(const std::string &fn) {
+/**
+ * @class gif::Writer
+ */
+Writer::Writer(std::string path)
+		: mPath(path) {
+}
+
+Writer&	Writer::setTableMode(TableMode m) {
+	mTableMode = m;
+	return *this;
+}
+
+bool Writer::write() {
 	try {
-		std::ofstream		output(fn, std::ios::out | std::ios::binary);
+		std::ofstream		output(mPath, std::ios::out | std::ios::binary);
 		Header				header(SIG, Version::k89a);
 		LogicalScreen		screen;
 
 		header.write(output);
 	} catch (std::exception const &ex) {
-		std::cout << "Error in gif::File::save()=" << ex.what() << std::endl;
+		std::cout << "Error in gif::Writer::write()=" << ex.what() << std::endl;
 	}
 	return false;
 }

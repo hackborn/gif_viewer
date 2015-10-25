@@ -142,16 +142,15 @@ void GifApp::gifThread(ci::gl::ContextRef context) {
 	ci::ThreadSetup					threadSetup;
 	context->makeCurrent();
 
-	gif::File						gif;
 	while (!mQuit) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		try {
 			auto					input = mThreadInput.pop();
 			if (input) {
 				if (input->mType == InputType::kLoad) {
-					gifThreadLoad(input->mPaths, gif);
+					gifThreadLoad(input->mPaths);
 				} else if (input->mType == InputType::kSave) {
-					gifThreadSave(*input, gif);
+					gifThreadSave(*input);
 				}
 			}
 		} catch (std::exception const&) {
@@ -159,17 +158,19 @@ void GifApp::gifThread(ci::gl::ContextRef context) {
 	}
 }
 
-void GifApp::gifThreadLoad(const std::vector<std::string> &input, gif::File &gf) {
+void GifApp::gifThreadLoad(const std::vector<std::string> &input) {
 	auto				output = mThreadOutput.make();
 	for (const auto& it : input) {
-		gf.load(it, *output);
+		gif::Reader		file(it);
+		file.read(*output);
 		// Ideally we'd have a way to signal the gif to quit if
 		// we got the quit command in the middle of loading.
 	}
 	mThreadOutput.push(output);
 }
-void GifApp::gifThreadSave(const Input &input, gif::File &gf) {
-	gf.save(input.mSavePath);
+void GifApp::gifThreadSave(const Input &input) {
+	gif::Writer		file(input.mSavePath);
+	file.write();
 }
 
 namespace {

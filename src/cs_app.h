@@ -10,7 +10,6 @@
 #include "safe_value.h"
 #include "texture_gif_view.h"
 
-namespace gif { class File; }
 namespace cs {
 
 /**
@@ -48,8 +47,8 @@ private:
 	std::shared_ptr<Input>		makeInput(const ci::app::FileDropEvent&) const;
 	// Separate thread where all the file loading and saving occurs.
 	void						gifThread(ci::gl::ContextRef);
-	void						gifThreadLoad(const std::vector<std::string>&, gif::File&);
-	void						gifThreadSave(const Input&, gif::File&);
+	void						gifThreadLoad(const std::vector<std::string>&);
+	void						gifThreadSave(const Input&);
 
 	// Drawing
 	ci::CameraOrtho				mCameraOrtho;

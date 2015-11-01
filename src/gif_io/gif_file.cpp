@@ -1,11 +1,13 @@
 #include "gif_file.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
+
+#include <unordered_map>
 #include <vector>
 #include "gif_list.h"
 #include "lzw_reader.h"
@@ -13,11 +15,10 @@
 namespace gif {
 
 namespace {
-class GraphicControlExtension;
-using GraphicControlExtensionRef = std::shared_ptr<GraphicControlExtension>;
 
 const std::string	SIG("GIF");
 enum class Version { kMissing, k87a, k89a };
+const uint8_t		IMAGE_DESCRIPTOR_LABEL(0x2C);
 
 size_t				color_count(const size_t encoded) {
 	return static_cast<size_t>(std::pow(2, encoded+1));
@@ -29,6 +30,20 @@ int32_t				read_2_byte_int(const std::vector<char> &buffer, size_t &position) {
 	return (b<<8) | a;
 }
 
+uint8_t				count_bits(const uint8_t value) {
+	uint8_t			ans = 0;
+	for (size_t k=0; k<8; ++k) {
+		if ((value&(1<<k)) != 0) ++ans;
+	}
+	return ans;
+}
+
+void				write_2_byte_int(const int16_t value, std::ostream &output) {
+	uint8_t			a = static_cast<uint8_t>(value&0xff),
+					b = static_cast<uint8_t>((value>>8)&0xff);
+	output << a << b;
+}
+
 std::string			read_string(const std::vector<char> &buffer, const size_t size, size_t &position) {
 	std::stringstream	buf;
 	for (size_t k=0; k<size; ++k) buf << buffer[position++];
@@ -38,6 +53,24 @@ std::string			read_string(const std::vector<char> &buffer, const size_t size, si
 struct ColorTable {
 	std::vector<gif::ColorA8u>	mColors;
 
+	void			from(const gif::Bitmap &src, const size_t max_size = (1<<8)) {
+		mColors.clear();
+		if (src.empty()) return;
+
+		// Simple utility to find all colors and eliminate based on a similarity until we're down to our max size.
+		std::unordered_map<gif::ColorA8u, size_t>	ct;
+		for (const auto& pix : src.mPixels) ct[pix]++;
+
+		// For now, just clip based the most-used colors. CLEARLY THIS NEEDS TO CHANGE
+		using Counter = std::pair<gif::ColorA8u, size_t>;
+		std::vector<Counter>						vec;
+		for (const auto& p : ct) vec.push_back(Counter(p.first, p.second));
+		std::sort(vec.begin(), vec.end(), [](const Counter &a, const Counter &b)->bool{return a.second > b.second;});
+		if (vec.size() > max_size) vec.resize(max_size);
+		mColors.reserve(max_size);
+		for (const auto& p : vec) mColors.push_back(p.first);
+	}
+
 	size_t			read(const std::vector<char> &buffer, const size_t count, size_t position) {
 		for (size_t k=0; k<count; ++k) {
 			const uint8_t	r = buffer[position++],
@@ -46,6 +79,16 @@ struct ColorTable {
 			mColors.push_back(gif::ColorA8u(r, g, b));
 		}
 		return position;
+	}
+
+	void			write(std::ostream &output) const {
+		write(mColors, output);
+	}
+
+	void			write(const std::vector<gif::ColorA8u> &clrs, std::ostream &output) const {
+		for (const auto& c : clrs) {
+			output << c.r << c.g << c.b;
+		}
 	}
 };
 
@@ -96,6 +139,7 @@ struct BlockReadArgs {
 	gif::ListConstructor&		mConstructor;
 };
 
+// HEADER
 struct Header {
 	Header() { }
 	Header(const std::string &sig, const Version &v) : mSig(sig), mVersion(v) { }
@@ -122,6 +166,7 @@ struct Header {
 	}
 };
 
+// LOGICAL-SCREEN
 struct LogicalScreen {
 	static const uint32_t	GLOBAL_COLOR_TABLE_F = (1<<0);
 	static const uint32_t	SORT_F = (1<<1);
@@ -136,100 +181,55 @@ struct LogicalScreen {
 	bool			hasGlobalColorTable() const { return (mFlags&GLOBAL_COLOR_TABLE_F) != 0; }
 
 	size_t			read(const std::vector<char> &buffer, size_t position) {
+		// Screen size
 		mScreenWidth = read_2_byte_int(buffer, position);
 		mScreenHeight = read_2_byte_int(buffer, position);
 
+		// Flags
 		uint8_t		a = buffer[position++];
 		if ((a&(1<<7)) != 0) mFlags |= GLOBAL_COLOR_TABLE_F;
 		mColorResolution = (a>>4)&0x7;
 		if ((a&(1<<3)) != 0) mFlags |= SORT_F;
 		mSizeOfGlobalColorTable = (a&0x7);
 
+		// Background color index
 		mBackgroundColorIndex = buffer[position++];
 		
+		// Aspect ratio
 		mPixelAspectRatio = buffer[position++];
 
 		return position;
 	}
-};
 
-class Data {
-public:
-	Data() { }
+	void			write(std::ostream &output, const size_t global_ct_size) {
+		// Screen size
+		write_2_byte_int(static_cast<int16_t>(mScreenWidth), output);
+		write_2_byte_int(static_cast<int16_t>(mScreenHeight), output);
 
-	std::vector<char>	mData;
-};
-using DataRef = std::shared_ptr<Data>;
-
-class Block {
-public:
-	Block() { }
-	virtual ~Block() { }
-
-	std::vector<DataRef>	mSubBlocks;
-
-	// Generic utility to read blocks
-	size_t					readSubBlocks(const std::vector<char> &buffer, size_t position) {
-		// Read data blocks, first byte is block size, 0 is the terminator
-		uint8_t				block_size = 0;
-		while ( (block_size = buffer[position++]) != 0) {
-			DataRef			data = std::make_shared<Data>();
-			data->mData.reserve(block_size);
-			data->mData.insert(data->mData.begin(), buffer.begin()+position, buffer.begin()+position+block_size);
-			mSubBlocks.push_back(data);
-
-			position += block_size;
+		// Flags
+		uint8_t			f = 0;
+		if ((mFlags&GLOBAL_COLOR_TABLE_F) != 0) {
+			// Has global color table flag
+			f |= 1<<7;
+			// Size of global color table
+			uint8_t		bits = 1;
+			size_t		size = global_ct_size;
+			while (size > 4) {
+				size /= 2;
+				++bits;
+			}
+			f |= bits;
 		}
-		return position;
-	}
-};
-using BlockRef = std::shared_ptr<Block>;
+		// XXX Ideally this is based on an analysis of the original image,
+		// but I'm really not sure how this is ever used
+		f |= 0x7 << 4;	// color resolution
+		output << f;
 
-class GraphicControlExtension : public Block {
-public:
-	enum class Disposal			{ kUnspecified, kDoNotDispose, kRestoreToBackgroundColor, kRestoreToPrevious };
-	static const uint32_t		TRANSPARENT_COLOR_F = (1<<0);
-	static const uint32_t		USER_INPUT_EXPECTED_F = (1<<1);
+		// Background color index
+		output << mBackgroundColorIndex;
 
-	GraphicControlExtension() { }
-
-	uint32_t				mFlags = 0;
-	Disposal				mDisposal = Disposal::kUnspecified;
-	uint8_t					mTransparencyIndex = 0;
-	double					mDelay = 0.0;
-
-	bool					hasTransparentColor() const { return (mFlags&TRANSPARENT_COLOR_F) != 0; }
-
-	// We are past the introducer and app bytes here
-	size_t					read(const std::vector<char> &buffer, size_t position) {
-		uint8_t				block_size = buffer[position++];
-		if (block_size != 4) throw std::runtime_error("GraphicControlExtension has illegal Block Size");
-
-		// fields
-		const uint8_t		fields = buffer[position++];
-		if ((fields&(1<<0)) != 0) mFlags |= TRANSPARENT_COLOR_F;
-		if ((fields&(1<<1)) != 0) mFlags |= USER_INPUT_EXPECTED_F;
-		const uint8_t		disposal = ((fields>>2)&0x7);
-		if (disposal == 1) mDisposal = Disposal::kDoNotDispose;
-		else if (disposal == 2) mDisposal = Disposal::kRestoreToBackgroundColor;
-		else if (disposal == 3) mDisposal = Disposal::kRestoreToPrevious;
-
-		// delay time
-		const uint8_t		dt0 = buffer[position++],
-							dt1 = buffer[position++];
-		// xxx decode...
-		if (dt0 != 0 || dt1 != 0) {
-			int32_t			v = (static_cast<int32_t>(dt1) << 8) | static_cast<int32_t>(dt0);
-			mDelay = static_cast<double>(v) / 100.0;
-		}
-		// transparent color index
-		mTransparencyIndex = buffer[position++];
-
-		// terminator
-		const uint8_t		term = buffer[position++];
-		if (term != 0) throw std::runtime_error("GraphicControlExtension missing block terminator");
-
-		return position;
+		// Aspect ratio
+		output << mPixelAspectRatio;
 	}
 };
 
@@ -346,7 +346,7 @@ public:
 				throw std::runtime_error("Read block on invalid extension byte");
 			}
 		// Image
-		} else if (byte1 == 0x2c) {
+		} else if (byte1 == IMAGE_DESCRIPTOR_LABEL) {
 			std::shared_ptr<ImageData>						block = std::make_shared<ImageData>();
 			position = block->read(buffer, position, bra);
 			mBlocks.push_back(block);
@@ -442,28 +442,78 @@ bool Reader::read(gif::ListConstructor &constructor) {
 }
 
 /**
+ * @class gif::WriterSettings
+ */
+void WriterSettings::makeGlobalTable(const gif::Bitmap &bm) {
+	if (!mBitmapToPalette) throw std::runtime_error("makeGlobalTable() missing BitmapToPalette algorithm");
+	const size_t		max_size = 1<<8;
+	mBitmapToPalette->convert(bm, max_size, mGlobalPalette);
+	mGlobalPalette.clip(max_size);
+}
+
+/**
  * @class gif::Writer
  */
 Writer::Writer(std::string path)
-		: mPath(path) {
+		: base([this](const gif::Bitmap &src, gif::Bitmap &dst){convert(src, dst);}, path) {
 }
 
-Writer&	Writer::setTableMode(TableMode m) {
-	mTableMode = m;
-	return *this;
+void Writer::convert(const gif::Bitmap &src, gif::Bitmap &dst) const {
+	dst = src;
 }
 
-bool Writer::write() {
-	try {
-		std::ofstream		output(mPath, std::ios::out | std::ios::binary);
-		Header				header(SIG, Version::k89a);
-		LogicalScreen		screen;
+/**
+ * @func gif::write_header()
+ * &brief Write the grammar for "Header <Logical Screen>"
+ */
+void		write_header(const gif::WriterSettings &s, std::ostream &output) {
+	// Header
+	Header				header(SIG, Version::k89a);
+	header.write(output);
 
-		header.write(output);
-	} catch (std::exception const &ex) {
-		std::cout << "Error in gif::Writer::write()=" << ex.what() << std::endl;
+	// Logical screen
+	LogicalScreen		screen;
+	screen.mScreenWidth = s.mWidth;
+	screen.mScreenHeight = s.mHeight;
+	screen.mBackgroundColorIndex = s.mBackgroundColorIndex;
+	if (s.mGlobalPalette.size() > 0) {
+		screen.mFlags |= LogicalScreen::GLOBAL_COLOR_TABLE_F;
 	}
-	return false;
+	screen.write(output, s.mGlobalPalette.size());
+
+	// Global color table
+	if (s.mGlobalPalette.size() > 0) {
+		ColorTable().write(s.mGlobalPalette.mColors, output);
+	}
+}
+
+/**
+ * @func gif::write_table_based_image()
+ * &brief Write the grammar for "<Table-Based Image>"
+ */
+void		write_table_based_image(const gif::WriterSettings &s, const gif::Bitmap &bm, const PalettedBitmap &pbm,
+									LzwWriter &lzw, WriterBuffer &wb, std::ostream &output) {
+		const gif::Palette*		ct = &s.mGlobalPalette;
+
+		// Image descriptor. Currently don't support subareas
+		output << IMAGE_DESCRIPTOR_LABEL;
+
+		write_2_byte_int(0, output);	// left
+		write_2_byte_int(0, output);	// top
+		write_2_byte_int(static_cast<uint16_t>(s.mWidth), output);
+		write_2_byte_int(static_cast<uint16_t>(s.mHeight), output);
+
+		// Currently don't support local color tables, interlacing or sorting		
+		uint8_t					fields = 0;
+		output << fields;
+
+		// Image data
+		const uint8_t				lzw_code_size = count_bits(static_cast<uint8_t>(ct->size()-1));
+		output << lzw_code_size;
+		wb.clear();
+		lzw.begin(lzw_code_size, [&wb](const std::vector<uint8_t> &data){wb.write(data);});
+		lzw.encode(pbm.mPixels);
+		wb.terminate();
 }
 
 } // namespace gif

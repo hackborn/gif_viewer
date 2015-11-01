@@ -39,11 +39,12 @@ void LzwReader::begin(	const uint8_t code_size,
 
 bool LzwReader::decode(CIter begin, CIter end) {
 	mO = 0;
-
+size_t	code_count = 0;
 	while (begin != end) {
 		// get next code
 		bool			error = true;
 		uint16_t		code = readCodeLsb(begin, end, error);
+++code_count;
 		if (error) {
 			flush();
 			return false;

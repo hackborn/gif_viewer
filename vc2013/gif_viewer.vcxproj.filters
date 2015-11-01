@@ -66,6 +66,15 @@
     <ClInclude Include="..\src\texture_gif_view.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\gif_io\gif_block.h">
+      <Filter>Source Files\gif_io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gif_io\lzw_writer.h">
+      <Filter>Source Files\gif_io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gif_io\gif_algorithm.h">
+      <Filter>Source Files\gif_io</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -101,6 +110,15 @@
     </ClCompile>
     <ClCompile Include="..\src\texture_gif_view.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gif_io\gif_block.cpp">
+      <Filter>Source Files\gif_io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gif_io\lzw_writer.cpp">
+      <Filter>Source Files\gif_io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gif_io\gif_algorithm.cpp">
+      <Filter>Source Files\gif_io</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

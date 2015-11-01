@@ -4,3 +4,4 @@ Release
 /vc2013/*.suo
 Debug
 /vc2013/*.opensdf
+/vc2013/*.user

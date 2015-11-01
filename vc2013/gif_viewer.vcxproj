@@ -279,8 +279,11 @@ xcopy /y "..\..\..\lib\msw\x86\d3dcompiler_46.dll" "$(OutDir)"</Command>
   <ItemGroup />
   <ItemGroup>
     <ClCompile Include="..\src\cs_app.cpp" />
+    <ClCompile Include="..\src\gif_io\gif_algorithm.cpp" />
+    <ClCompile Include="..\src\gif_io\gif_block.cpp" />
     <ClCompile Include="..\src\gif_io\gif_file.cpp" />
     <ClCompile Include="..\src\gif_io\lzw_reader.cpp" />
+    <ClCompile Include="..\src\gif_io\lzw_writer.cpp" />
     <ClCompile Include="..\src\kt\app\kt_environment.cpp" />
     <ClCompile Include="..\src\kt\app\kt_string.cpp" />
     <ClCompile Include="..\src\kt\time\seconds.cpp" />
@@ -290,11 +293,14 @@ xcopy /y "..\..\..\lib\msw\x86\d3dcompiler_46.dll" "$(OutDir)"</Command>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h" />
     <ClInclude Include="..\src\cs_app.h" />
+    <ClInclude Include="..\src\gif_io\gif_algorithm.h" />
     <ClInclude Include="..\src\gif_io\gif_bitmap.h" />
+    <ClInclude Include="..\src\gif_io\gif_block.h" />
     <ClInclude Include="..\src\gif_io\gif_color.h" />
     <ClInclude Include="..\src\gif_io\gif_file.h" />
     <ClInclude Include="..\src\gif_io\gif_list.h" />
     <ClInclude Include="..\src\gif_io\lzw_reader.h" />
+    <ClInclude Include="..\src\gif_io\lzw_writer.h" />
     <ClInclude Include="..\src\kt\app\kt_environment.h" />
     <ClInclude Include="..\src\kt\app\kt_string.h" />
     <ClInclude Include="..\src\kt\time\seconds.h" />

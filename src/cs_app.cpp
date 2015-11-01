@@ -40,7 +40,7 @@ void GifApp::prepareSettings(Settings* s) {
 		s->setTitle("GIF Viewer");
 		s->setWindowSize(glm::ivec2(1920, 1080));
 //		s->setFullScreen(true);
-//		s->setConsoleWindowEnabled(true);
+		s->setConsoleWindowEnabled(true);
 	}
 }
 
@@ -59,10 +59,12 @@ void GifApp::setup() {
 	ci::gl::ContextRef backgroundCtx = ci::gl::Context::create(ci::gl::context());
 	mThread = std::thread( bind( &GifApp::gifThread, this, backgroundCtx));
 
+#if 0
 	// Load the default GIF.
 	auto	input = mThreadInput.make();
 	input->mPaths.push_back(kt::env::expand("$(DATA)/tumblr_n8njbcmeWS1t9jwm6o1_400.gif"));
 	mThreadInput.push(input);
+#endif
 }
 
 void GifApp::keyDown(ci::app::KeyEvent e) {
@@ -153,7 +155,8 @@ void GifApp::gifThread(ci::gl::ContextRef context) {
 					gifThreadSave(*input);
 				}
 			}
-		} catch (std::exception const&) {
+		} catch (std::exception const &ex) {
+			std::cout << "Error=" << ex.what() << std::endl;
 		}
 	}
 }
@@ -161,16 +164,45 @@ void GifApp::gifThread(ci::gl::ContextRef context) {
 void GifApp::gifThreadLoad(const std::vector<std::string> &input) {
 	auto				output = mThreadOutput.make();
 	for (const auto& it : input) {
-		gif::Reader		file(it);
-		file.read(*output);
-		// Ideally we'd have a way to signal the gif to quit if
-		// we got the quit command in the middle of loading.
+		gif::Reader(it).read(*output);
 	}
 	mThreadOutput.push(output);
 }
+
+namespace {
+
+bool			convert(const std::string &filename, gif::Bitmap &dst) {
+	ci::Surface8u		src(ci::loadImage(filename));
+	dst.setTo(src.getWidth(), src.getHeight());
+	if (dst.empty()) return false;
+
+	auto				dit = dst.mPixels.begin();
+	auto				sit = src.getIter();
+	while (sit.line()) {
+		while (sit.pixel()) {
+			dit->r = sit.r();
+			dit->g = sit.g();
+			dit->b = sit.b();
+			dit->a = sit.a();
+			++dit;
+		}
+	}
+	return true;
+}
+
+}
+
 void GifApp::gifThreadSave(const Input &input) {
-	gif::Writer		file(input.mSavePath);
-	file.write();
+	gif::Writer			file(input.mSavePath);
+	file.setTableMode(gif::TableMode::kGlobalTableFromFirst);
+	gif::Bitmap			bm;
+	for (const auto& it : input.mPaths) {
+		if (!is_image(it)) continue;
+		if (convert(it, bm)) {
+			file.writeFrame(bm);
+		}
+	}
+	std::cout << "done writing" << std::endl;
 }
 
 namespace {

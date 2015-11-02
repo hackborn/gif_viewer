@@ -7,6 +7,8 @@
 #include <cinder/gl/Context.h>
 #include <cinder/Camera.h>
 #include <cinder/Thread.h>
+#include "app/mutex_vector.h"
+#include "app/status.h"
 #include "safe_value.h"
 #include "texture_gif_view.h"
 
@@ -64,6 +66,12 @@ private:
 	std::atomic_bool			mQuit;
 	SafeValue<Input>			mThreadInput;
 	SafeValue<TextureGifList>	mThreadOutput;
+	uint32_t					mThreadStatusId = 0;
+
+	// Status
+	using StatusVector = MutexVector<Status>;
+	StatusVector				mStatusTransport;
+	StatusVector::Container		mStatus;
 };
 
 } // namespace cs

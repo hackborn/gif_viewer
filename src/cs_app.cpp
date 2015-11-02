@@ -40,7 +40,7 @@ void GifApp::prepareSettings(Settings* s) {
 		s->setTitle("GIF Viewer");
 		s->setWindowSize(glm::ivec2(1920, 1080));
 //		s->setFullScreen(true);
-		s->setConsoleWindowEnabled(true);
+//		s->setConsoleWindowEnabled(true);
 	}
 }
 
@@ -59,12 +59,10 @@ void GifApp::setup() {
 	ci::gl::ContextRef backgroundCtx = ci::gl::Context::create(ci::gl::context());
 	mThread = std::thread( bind( &GifApp::gifThread, this, backgroundCtx));
 
-#if 0
 	// Load the default GIF.
 	auto	input = mThreadInput.make();
 	input->mPaths.push_back(kt::env::expand("$(DATA)/tumblr_n8njbcmeWS1t9jwm6o1_400.gif"));
 	mThreadInput.push(input);
-#endif
 }
 
 void GifApp::keyDown(ci::app::KeyEvent e) {
@@ -111,6 +109,11 @@ void GifApp::update() {
 	mFrame = static_cast<int32_t>(mGifView.getCurrentFrame());
 	mParams->hide();	// Params don't seem designed for a high update rate, this flushes it.
 	mParams->show();
+
+	// Update status
+	mStatusTransport.pop_all(mStatus);
+for (const auto& it : mStatus) std::cout << "status " << it.mId << "=" << it.mMessage << std::endl;
+mStatus.clear();
 }
 
 void GifApp::draw() {
@@ -164,7 +167,9 @@ void GifApp::gifThread(ci::gl::ContextRef context) {
 void GifApp::gifThreadLoad(const std::vector<std::string> &input) {
 	auto				output = mThreadOutput.make();
 	for (const auto& it : input) {
+		mStatusTransport.push_back(Status(Status::Type::kStart, ++mThreadStatusId, "Loading " + it));
 		gif::Reader(it).read(*output);
+		mStatusTransport.push_back(Status(Status::Type::kEnd, mThreadStatusId, std::string()));
 	}
 	mThreadOutput.push(output);
 }

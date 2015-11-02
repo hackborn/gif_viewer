@@ -25,6 +25,9 @@
     <Filter Include="Source Files\gif_io">
       <UniqueIdentifier>{8cfd3fdb-e38f-4b81-9f8b-56eeb1c05234}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\app">
+      <UniqueIdentifier>{fc764ac8-7749-482c-a063-66a452626893}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -75,6 +78,12 @@
     <ClInclude Include="..\src\gif_io\gif_algorithm.h">
       <Filter>Source Files\gif_io</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\app\status.h">
+      <Filter>Source Files\app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\app\mutex_vector.h">
+      <Filter>Source Files\app</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
@@ -119,6 +128,9 @@
     </ClCompile>
     <ClCompile Include="..\src\gif_io\gif_algorithm.cpp">
       <Filter>Source Files\gif_io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\app\status.cpp">
+      <Filter>Source Files\app</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -278,6 +278,7 @@ xcopy /y "..\..\..\lib\msw\x86\d3dcompiler_46.dll" "$(OutDir)"</Command>
   <ItemGroup />
   <ItemGroup />
   <ItemGroup>
+    <ClCompile Include="..\src\app\status.cpp" />
     <ClCompile Include="..\src\cs_app.cpp" />
     <ClCompile Include="..\src\gif_io\gif_algorithm.cpp" />
     <ClCompile Include="..\src\gif_io\gif_block.cpp" />
@@ -292,6 +293,8 @@ xcopy /y "..\..\..\lib\msw\x86\d3dcompiler_46.dll" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h" />
+    <ClInclude Include="..\src\app\mutex_vector.h" />
+    <ClInclude Include="..\src\app\status.h" />
     <ClInclude Include="..\src\cs_app.h" />
     <ClInclude Include="..\src\gif_io\gif_algorithm.h" />
     <ClInclude Include="..\src\gif_io\gif_bitmap.h" />

@@ -1,3 +1,8 @@
+# NOTE
+This repo is deprecated. It's been forked into this one:
+https://github.com/hackborn/gifbox
+which is where all future development will occur. Leaving this here for now because it provides a super-simple application to see the pieces put together.
+
 # gif_viewer
 Simple GIF file reader library and example viewer. C++/Cinder/Visual Studio 2013.
 
